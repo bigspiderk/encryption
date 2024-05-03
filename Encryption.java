@@ -1,4 +1,3 @@
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -62,7 +61,7 @@ public class Encryption {
                 out.write(binToInt(chunck));
             }
 
-            encryptFile(in, out, password);
+            encrypt(in, out, password);
             System.out.println("Successfully Locked File");
         } catch (IOException e) {
             e.printStackTrace();
@@ -96,7 +95,7 @@ public class Encryption {
             }
             s.close();
             String unlockedFilename = String.format("unlocked-%s", file.substring(0, file.indexOf(".lock")));
-            encryptFile(in, new FileOutputStream(unlockedFilename), passwordAttempt);
+            encrypt(in, new FileOutputStream(unlockedFilename), passwordAttempt);
             System.out.println("Succesfully Unlocked File");
         } catch (IOException e) {
             e.printStackTrace();
@@ -104,44 +103,13 @@ public class Encryption {
 
     }
 
-    public static void encryptFile(FileInputStream in, FileOutputStream out, String password) throws IOException{
+    public static void encrypt(FileInputStream in, FileOutputStream out, String password) throws IOException{
         int length = in.available();
         for (int i = 0; i < length; i++) {
-            out.write(encryptByte((byte) in.read(), password.charAt(i%password.length())) &0xff);
+            out.write(~(in.read() ^ password.charAt(i%password.length())));
         }
         in.close();
         out.close();
-    }
-
-    public static byte encryptByte(byte b, char c) {
-        String keyBits = intToBin(c);
-        String bits = intToBin(b &0xff);
-        int newByte = 0;
-        for (int i = bits.length()-1; i >= 0; i--) {
-            if (keyBits.charAt(i) == bits.charAt(i)) {
-                newByte += Math.pow(2, i);
-            }
-        }
-        return (byte) newByte;
-    }
-
-    public static byte[] encrypt(byte[] text, String key) {
-        ByteArrayOutputStream encryptedText = new ByteArrayOutputStream();
-        String keyBits;
-        String bits;
-        int currentByte = 0;
-        for (int i = 0; i < text.length; i++) {
-            currentByte = 0;
-            keyBits = intToBin(key.charAt(i%key.length()));
-            bits = intToBin(text[i] &0xff);
-            for (int j = bits.length()-1; j >= 0; j--) {
-                if (keyBits.charAt(j) == bits.charAt(j)) {
-                    currentByte += Math.pow(2, j);
-                }
-            }
-            encryptedText.write(currentByte);
-        }
-        return encryptedText.toByteArray();
     }
 
     public static int hash(String s) {
